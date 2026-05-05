@@ -10,22 +10,28 @@ interface LedgerProps {
 
 export const Ledger: React.FC<LedgerProps> = ({ projects }) => {
   const monthlyData = projects.reduce((acc: any, curr) => {
+    if (!curr.runningDate) return acc;
     const date = new Date(curr.runningDate);
-    const month = date.toLocaleString('default', { month: 'Long', year: 'numeric' });
+    if (isNaN(date.getTime())) return acc;
+
+    const month = date.toLocaleString('default', { month: 'long', year: 'numeric' });
+    const sortKey = date.toISOString().slice(0, 7);
     
     if (!acc[month]) {
-      acc[month] = { month, revenue: 0, payout: 0, profit: 0, count: 0 };
+      acc[month] = { month, revenue: 0, payout: 0, profit: 0, count: 0, sortKey };
     }
     
-    acc[month].revenue += curr.revenue;
-    acc[month].payout += curr.payout;
-    acc[month].profit += curr.profit;
+    acc[month].revenue += Number(curr.revenue) || 0;
+    acc[month].payout += Number(curr.payout) || 0;
+    acc[month].profit += Number(curr.profit) || 0;
     acc[month].count += 1;
     
     return acc;
   }, {});
 
-  const data = Object.values(monthlyData).sort((a: any, b: any) => 1);
+  const data = Object.values(monthlyData).sort((a: any, b: any) => {
+    return b.sortKey.localeCompare(a.sortKey); // Most recent first for ledger
+  });
 
   return (
     <div className="bg-white border-2 border-[#141414] shadow-[4px_4px_0px_0px_#141414] overflow-hidden">

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Save } from 'lucide-react';
 import { Project, JobCategory, ProjectStatus } from '../types';
+import { cn } from '../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface ProjectFormProps {
@@ -11,6 +12,7 @@ interface ProjectFormProps {
 }
 
 export const ProjectForm: React.FC<ProjectFormProps> = ({ isOpen, onClose, onSubmit, initialData }) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     client: '',
@@ -48,11 +50,18 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({ isOpen, onClose, onSub
     }
   }, [initialData, isOpen]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const profit = formData.revenue - formData.payout;
-    onSubmit({ ...formData, profit, runningDate: new Date(formData.runningDate).toISOString() });
-    onClose();
+    setIsSubmitting(true);
+    try {
+      const profit = formData.revenue - formData.payout;
+      await onSubmit({ ...formData, profit, runningDate: new Date(formData.runningDate).toISOString() });
+      onClose();
+    } catch (error) {
+      console.error("Submission error:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -186,10 +195,20 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({ isOpen, onClose, onSub
                 </button>
                 <button
                   type="submit"
-                  className="flex items-center gap-2 bg-[#141414] text-white px-8 py-3 font-bold uppercase text-xs tracking-widest shadow-[4px_4px_0px_0px_#10B981] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all"
+                  disabled={isSubmitting}
+                  className={cn(
+                    "flex items-center gap-2 bg-[#141414] text-white px-8 py-3 font-bold uppercase text-xs tracking-widest transition-all",
+                    isSubmitting 
+                      ? "opacity-50 cursor-not-allowed" 
+                      : "shadow-[4px_4px_0px_0px_#10B981] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none"
+                  )}
                 >
-                  <Save size={16} />
-                  {initialData ? 'Update Core' : 'Deploy Project'}
+                  {isSubmitting ? (
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  ) : (
+                    <Save size={16} />
+                  )}
+                  {isSubmitting ? 'PROCESSING...' : (initialData ? 'Update Core' : 'Deploy Project')}
                 </button>
               </div>
             </form>

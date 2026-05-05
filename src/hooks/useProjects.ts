@@ -39,10 +39,30 @@ export function useProjects() {
     const q = query(collection(db, path), orderBy('createdAt', 'desc'));
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const data = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as Project[];
+      const data = snapshot.docs.map(doc => {
+        const d = doc.data();
+        
+        // Helper to safely get a string date from potentially null Firestore Timestamps
+        const safeDate = (ts: any) => {
+          if (!ts) return new Date().toISOString();
+          try {
+            if (typeof ts.toDate === 'function') return ts.toDate().toISOString();
+            if (ts instanceof Date) return ts.toISOString();
+            if (typeof ts === 'string') return ts;
+            return new Date().toISOString();
+          } catch (e) {
+            return new Date().toISOString();
+          }
+        };
+
+        return {
+          ...d,
+          id: doc.id,
+          createdAt: safeDate(d.createdAt),
+          updatedAt: safeDate(d.updatedAt),
+          runningDate: d.runningDate || new Date().toISOString(),
+        };
+      }) as Project[];
       setProjects(data);
       setLoading(false);
     }, (err) => {

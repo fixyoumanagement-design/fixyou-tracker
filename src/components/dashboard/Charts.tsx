@@ -19,23 +19,26 @@ interface ChartsProps {
 export const Charts: React.FC<ChartsProps> = ({ projects }) => {
   // Aggregate data by month
   const monthlyData = projects.reduce((acc: any, curr) => {
+    if (!curr.runningDate) return acc;
     const date = new Date(curr.runningDate);
+    if (isNaN(date.getTime())) return acc;
+    
     const month = date.toLocaleString('default', { month: 'short', year: '2-digit' });
+    const sortKey = date.toISOString().slice(0, 7); // yyyy-mm for sorting
     
     if (!acc[month]) {
-      acc[month] = { month, revenue: 0, profit: 0, count: 0 };
+      acc[month] = { month, revenue: 0, profit: 0, count: 0, sortKey };
     }
     
-    acc[month].revenue += curr.revenue;
-    acc[month].profit += curr.profit;
+    acc[month].revenue += Number(curr.revenue) || 0;
+    acc[month].profit += Number(curr.profit) || 0;
     acc[month].count += 1;
     
     return acc;
   }, {});
 
   const data = Object.values(monthlyData).sort((a: any, b: any) => {
-    // Simple sort for display, could be more robust
-    return 1; 
+    return a.sortKey.localeCompare(b.sortKey);
   });
 
   return (

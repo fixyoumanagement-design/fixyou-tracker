@@ -26,7 +26,39 @@ export default function App() {
     visible: false
   });
   
-  const { projects, loading, addProject, updateProject, deleteProject } = useProjects();
+  const { projects, loading, error, addProject, updateProject, deleteProject } = useProjects();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#F5F5F3] flex items-center justify-center font-mono">
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="text-lg uppercase tracking-widest text-[#141414] flex items-center gap-3"
+        >
+          <div className="w-4 h-4 bg-[#141414] animate-pulse" />
+          Synchronizing Data...
+        </motion.div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-[#F5F5F3] flex items-center justify-center p-10 font-sans">
+        <div className="max-w-md w-full bg-white border-4 border-[#141414] p-10 shadow-[12px_12px_0px_0px_#141414]">
+          <h2 className="text-2xl font-black uppercase mb-4 text-red-600">Critical Data Error</h2>
+          <p className="font-mono text-xs uppercase mb-6">{error}</p>
+          <button 
+            onClick={() => window.location.reload()}
+            className="w-full bg-[#141414] text-white py-4 font-bold uppercase tracking-widest"
+          >
+            Reboot System
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   const showToast = (message: string, type: 'success' | 'error' = 'success') => {
     setToast({ message, type, visible: true });
