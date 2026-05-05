@@ -1,0 +1,64 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && 
+             request.auth.token.email == "fixyoumanagement@gmail.com" && 
+             request.auth.token.email_verified == true;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // Validation for Project
+    function isValidProject(data) {
+      return data.name is string && data.name.size() > 0 && data.name.size() <= 200 &&
+             data.client is string && data.client.size() > 0 && data.client.size() <= 200 &&
+             data.brand is string && data.brand.size() > 0 && data.brand.size() <= 100 &&
+             data.runningDate is string &&
+             data.revenue is number &&
+             data.payout is number &&
+             data.profit == data.revenue - data.payout &&
+             data.status in ["WAIT", "BOOKING", "FIXED/RUNNING", "FINALIZED"] &&
+             data.category in ["PIC", "Job Partner", "Job Vendor"];
+    }
+
+    match /projects/{projectId} {
+      allow read: if isAdmin();
+      
+      allow create: if isAdmin() && 
+                      isValidId(projectId) && 
+                      isValidProject(incoming()) &&
+                      incoming().createdAt == request.time &&
+                      incoming().updatedAt == request.time &&
+                      incoming().createdBy == request.auth.uid;
+
+      allow update: if isAdmin() && 
+                      isValidProject(incoming()) &&
+                      incoming().createdBy == existing().createdBy &&
+                      incoming().createdAt == existing().createdAt &&
+                      incoming().updatedAt == request.time;
+
+      allow delete: if isAdmin();
+    }
+  }
+}
