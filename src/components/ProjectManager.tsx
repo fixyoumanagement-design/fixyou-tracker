@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Search, Filter, Trash2, Edit3, ExternalLink, Download } from 'lucide-react';
+import { Plus, Search, Filter, Trash2, Edit3, ExternalLink, Download, FileSpreadsheet, MessageCircle, Share2, Clipboard, Check } from 'lucide-react';
 import { Project, ProjectStatus } from '../types';
 import { formatRupiah, cn } from '../lib/utils';
 import { exportProjectsToExcel } from '../lib/export';
@@ -30,6 +30,7 @@ export const ProjectManager: React.FC<ProjectManagerProps> = ({
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState<ProjectStatus | 'ALL'>('ALL');
   const [filterBrand, setFilterBrand] = useState('ALL');
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const brands = ['ALL', ...Array.from(new Set(projects.map(p => p.brand)))];
 
@@ -140,17 +141,90 @@ export const ProjectManager: React.FC<ProjectManagerProps> = ({
                     <span className="text-amber-600 font-bold">{p.client}</span>
                     <span>•</span>
                     <span>{p.category}</span>
+                    <span>•</span>
+                    <span className="bg-violet-50 text-violet-700 px-1.5 py-0.5 font-bold rounded">{p.talentCount || 0} TALENT</span>
+                  </div>
+
+                  {/* Asset & Broadcast Buttons */}
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {p.worksheetLink && (
+                      <a 
+                        href={p.worksheetLink} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-1 bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 font-black uppercase text-[8px] tracking-wider px-2 py-1 transition-all"
+                        title="Open Google Sheet Worksheet"
+                      >
+                        <FileSpreadsheet size={10} className="text-blue-500" />
+                        <span>Worksheet</span>
+                        <ExternalLink size={8} />
+                      </a>
+                    )}
+
+                    {p.groupLink && (
+                      <a 
+                        href={p.groupLink} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-1 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-700 font-black uppercase text-[8px] tracking-wider px-2 py-1 transition-all"
+                        title="Open WhatsApp Group Link"
+                      >
+                        <MessageCircle size={10} className="text-emerald-500" />
+                        <span>Link Group</span>
+                        <ExternalLink size={8} />
+                      </a>
+                    )}
+
+                    {p.broadcastText && (
+                      <button 
+                        onClick={() => {
+                          navigator.clipboard.writeText(p.broadcastText || '');
+                          setCopiedId(p.id);
+                          setTimeout(() => setCopiedId(null), 2000);
+                        }}
+                        className={cn(
+                          "flex items-center gap-1 border font-black uppercase text-[8px] tracking-wider px-2 py-1 transition-all active:translate-y-[1px]",
+                          copiedId === p.id 
+                            ? "bg-indigo-600 text-white border-indigo-600" 
+                            : "bg-indigo-50 hover:bg-indigo-100 border-indigo-200 text-indigo-700"
+                        )}
+                        title="Copy text formatted for broadcasting"
+                      >
+                        {copiedId === p.id ? (
+                          <>
+                            <Check size={10} />
+                            <span>Copied Broadcast!</span>
+                          </>
+                        ) : (
+                          <>
+                            <Share2 size={10} />
+                            <span>Copy Broadcast</span>
+                          </>
+                        )}
+                      </button>
+                    )}
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-8 pr-8">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-6 md:gap-8 pr-8">
                   <div>
                     <label className="block text-[8px] font-mono text-gray-400 uppercase font-black mb-1">Gross Revenue</label>
                     <span className="font-mono text-xs font-black">{formatRupiah(p.revenue)}</span>
                   </div>
                   <div>
-                    <label className="block text-[8px] font-mono text-gray-400 uppercase font-black mb-1">Net Profit</label>
-                    <span className="font-mono text-xs font-black text-emerald-600">{formatRupiah(p.profit)}</span>
+                    <label className="block text-[8px] font-mono text-gray-400 uppercase font-black mb-1">Talangan</label>
+                    <span className="font-mono text-xs font-black text-red-500">{formatRupiah(p.talangan || 0)}</span>
+                  </div>
+                  <div className="col-span-2 md:col-span-1 border-t md:border-t-0 pt-2 md:pt-0">
+                    <label className="block text-[8px] font-mono text-gray-400 uppercase font-black mb-1">
+                      {p.profit < 0 ? 'BONCOS (LOSS)' : 'Net Profit'}
+                    </label>
+                    <span className={cn(
+                      "font-mono text-xs font-black",
+                      p.profit < 0 ? "text-red-700 bg-red-50 px-1" : "text-emerald-600"
+                    )}>
+                      {formatRupiah(p.profit)}
+                    </span>
                   </div>
                 </div>
 

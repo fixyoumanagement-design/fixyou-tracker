@@ -11,6 +11,7 @@ import { Charts } from './components/dashboard/Charts';
 import { Ledger } from './components/dashboard/Ledger';
 import { ProjectManager } from './components/ProjectManager';
 import { ProjectForm } from './components/ProjectForm';
+import { NotesManager } from './components/NotesManager';
 import { Toast } from './components/ui/Toast';
 import { useProjects } from './hooks/useProjects';
 import { Project, ProjectStatus } from './types';
@@ -103,7 +104,7 @@ export default function App() {
     const p = projects.find(proj => proj.id === id);
     if (p) {
       try {
-        await updateProject(id, { ...p, status, profit: p.revenue - p.payout });
+        await updateProject(id, { ...p, status, profit: p.revenue - p.payout - (p.talangan || 0) });
         showToast(`STATUS RECONFIGURED: ${status}`);
       } catch (e) {
         showToast('STATUS UPDATE FAILED', 'error');
@@ -126,6 +127,7 @@ export default function App() {
                 {activeTab === 'dashboard' && 'Core Insights'}
                 {activeTab === 'projects' && 'Project Factory'}
                 {activeTab === 'accounting' && 'Financial Ledger'}
+                {activeTab === 'notes' && 'Notes & List Kerja'}
                 {activeTab === 'reports' && 'Strategic Reports'}
               </h1>
             </div>
@@ -171,6 +173,10 @@ export default function App() {
                   <Stats projects={projects} />
                   <Ledger projects={projects} />
                 </div>
+              )}
+
+              {activeTab === 'notes' && (
+                <NotesManager projects={projects} />
               )}
 
               {activeTab === 'reports' && (

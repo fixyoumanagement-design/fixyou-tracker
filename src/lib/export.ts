@@ -9,9 +9,13 @@ export function exportProjectsToExcel(projects: Project[]) {
     'Running Date': new Date(p.runningDate).toLocaleDateString('id-ID'),
     'Category': p.category,
     'Status': p.status,
+    'Jumlah Talent': p.talentCount || 0,
     'Gross Revenue (IDR)': p.revenue,
     'Payout (IDR)': p.payout,
+    'Talangan (IDR)': p.talangan || 0,
     'Net Profit (IDR)': p.profit,
+    'Worksheet Link': p.worksheetLink || '',
+    'Group WhatsApp Link': p.groupLink || '',
     'Created At': new Date(p.createdAt).toLocaleString('id-ID'),
   }));
 

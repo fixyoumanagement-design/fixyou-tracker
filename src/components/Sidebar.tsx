@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutDashboard, Briefcase, FileText, PieChart, LogOut, Settings } from 'lucide-react';
+import { LayoutDashboard, Briefcase, FileText, PieChart, LogOut, Settings, ClipboardList } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { logout } from '../lib/firebase';
 
@@ -13,6 +13,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => 
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'projects', label: 'Projects', icon: Briefcase },
     { id: 'accounting', label: 'Accounting', icon: FileText },
+    { id: 'notes', label: 'Notes & Checklist', icon: ClipboardList },
     { id: 'reports', label: 'Reports', icon: PieChart },
   ];
 

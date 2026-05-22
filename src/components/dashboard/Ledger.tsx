@@ -1,6 +1,6 @@
 import React from 'react';
 import { Project } from '../../types';
-import { formatRupiah } from '../../lib/utils';
+import { formatRupiah, cn } from '../../lib/utils';
 import { Download } from 'lucide-react';
 import { exportProjectsToExcel } from '../../lib/export';
 
@@ -18,11 +18,12 @@ export const Ledger: React.FC<LedgerProps> = ({ projects }) => {
     const sortKey = date.toISOString().slice(0, 7);
     
     if (!acc[month]) {
-      acc[month] = { month, revenue: 0, payout: 0, profit: 0, count: 0, sortKey };
+      acc[month] = { month, revenue: 0, payout: 0, talangan: 0, profit: 0, count: 0, sortKey };
     }
     
     acc[month].revenue += Number(curr.revenue) || 0;
     acc[month].payout += Number(curr.payout) || 0;
+    acc[month].talangan += Number(curr.talangan) || 0;
     acc[month].profit += Number(curr.profit) || 0;
     acc[month].count += 1;
     
@@ -56,6 +57,7 @@ export const Ledger: React.FC<LedgerProps> = ({ projects }) => {
               <th className="p-4 font-black uppercase text-center">Jobs</th>
               <th className="p-4 font-black uppercase">Gross Revenue</th>
               <th className="p-4 font-black uppercase">Payout</th>
+              <th className="p-4 font-black uppercase text-red-500">Talangan</th>
               <th className="p-4 font-black uppercase">Net Profit</th>
             </tr>
           </thead>
@@ -66,7 +68,13 @@ export const Ledger: React.FC<LedgerProps> = ({ projects }) => {
                 <td className="p-4 text-center">{row.count}</td>
                 <td className="p-4">{formatRupiah(row.revenue)}</td>
                 <td className="p-4 text-amber-600 font-bold">{formatRupiah(row.payout)}</td>
-                <td className="p-4 text-emerald-600 font-bold">{formatRupiah(row.profit)}</td>
+                <td className="p-4 text-red-500 font-bold">{formatRupiah(row.talangan)}</td>
+                <td className={cn(
+                  "p-4 font-bold",
+                  row.profit < 0 ? "text-red-700 bg-red-50" : "text-emerald-600"
+                )}>
+                  {formatRupiah(row.profit)}
+                </td>
               </tr>
             ))}
             {data.length === 0 && (

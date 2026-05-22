@@ -20,9 +20,27 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({ isOpen, onClose, onSub
     runningDate: new Date().toISOString().split('T')[0],
     revenue: 0,
     payout: 0,
+    talangan: 0,
+    talentCount: 0,
     status: 'WAIT' as ProjectStatus,
-    category: 'PIC' as JobCategory
+    category: 'PIC' as JobCategory,
+    worksheetLink: '',
+    groupLink: '',
+    broadcastText: ''
   });
+
+  const getSafeDateString = (dateVal: any) => {
+    if (!dateVal) return new Date().toISOString().split('T')[0];
+    try {
+      const d = new Date(dateVal);
+      if (!isNaN(d.getTime())) {
+        return d.toISOString().split('T')[0];
+      }
+    } catch (e) {
+      // ignore
+    }
+    return new Date().toISOString().split('T')[0];
+  };
 
   useEffect(() => {
     if (initialData) {
@@ -30,11 +48,16 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({ isOpen, onClose, onSub
         name: initialData.name,
         client: initialData.client,
         brand: initialData.brand,
-        runningDate: new Date(initialData.runningDate).toISOString().split('T')[0],
+        runningDate: getSafeDateString(initialData.runningDate),
         revenue: initialData.revenue,
         payout: initialData.payout,
+        talangan: initialData.talangan || 0,
+        talentCount: initialData.talentCount || 0,
         status: initialData.status,
-        category: initialData.category
+        category: initialData.category,
+        worksheetLink: initialData.worksheetLink || '',
+        groupLink: initialData.groupLink || '',
+        broadcastText: initialData.broadcastText || ''
       });
     } else {
       setFormData({
@@ -44,8 +67,13 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({ isOpen, onClose, onSub
         runningDate: new Date().toISOString().split('T')[0],
         revenue: 0,
         payout: 0,
+        talangan: 0,
+        talentCount: 0,
         status: 'WAIT',
-        category: 'PIC'
+        category: 'PIC',
+        worksheetLink: '',
+        groupLink: '',
+        broadcastText: ''
       });
     }
   }, [initialData, isOpen]);
@@ -54,8 +82,11 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({ isOpen, onClose, onSub
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      const profit = formData.revenue - formData.payout;
-      await onSubmit({ ...formData, profit, runningDate: new Date(formData.runningDate).toISOString() });
+      const profit = formData.revenue - formData.payout - formData.talangan;
+      // Use clean date string
+      const parsedDate = new Date(formData.runningDate);
+      const isoDate = isNaN(parsedDate.getTime()) ? new Date().toISOString() : parsedDate.toISOString();
+      await onSubmit({ ...formData, profit, runningDate: isoDate });
       onClose();
     } catch (error) {
       console.error("Submission error:", error);
@@ -93,7 +124,7 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({ isOpen, onClose, onSub
             <form onSubmit={handleSubmit} className="p-8 space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <label className="block text-[10px] font-black uppercase tracking-widest text-gray-400">Project Name</label>
+                  <label className="block text-[10px] font-black uppercase tracking-widest text-gray-400">Project Name / Nama Project</label>
                   <input
                     required
                     className="w-full bg-gray-50 border-2 border-gray-100 p-3 font-mono text-xs focus:border-[#141414] outline-none transition-colors"
@@ -103,7 +134,7 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({ isOpen, onClose, onSub
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="block text-[10px] font-black uppercase tracking-widest text-gray-400">Client / Principal</label>
+                  <label className="block text-[10px] font-black uppercase tracking-widest text-gray-400">Client / Principal / Klien</label>
                   <input
                     required
                     className="w-full bg-gray-50 border-2 border-gray-100 p-3 font-mono text-xs focus:border-[#141414] outline-none transition-colors"
@@ -113,7 +144,7 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({ isOpen, onClose, onSub
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="block text-[10px] font-black uppercase tracking-widest text-gray-400">Brand Entity</label>
+                  <label className="block text-[10px] font-black uppercase tracking-widest text-gray-400">Brand Entity / Brand</label>
                   <input
                     required
                     className="w-full bg-gray-50 border-2 border-gray-100 p-3 font-mono text-xs focus:border-[#141414] outline-none transition-colors"
@@ -123,7 +154,7 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({ isOpen, onClose, onSub
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="block text-[10px] font-black uppercase tracking-widest text-gray-400">Running Date</label>
+                  <label className="block text-[10px] font-black uppercase tracking-widest text-gray-400">Running Date / Tanggal Running (Data Running)</label>
                   <input
                     required
                     type="date"
@@ -133,7 +164,7 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({ isOpen, onClose, onSub
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="block text-[10px] font-black uppercase tracking-widest text-gray-400 text-emerald-600">Revenue (Gross)</label>
+                  <label className="block text-[10px] font-black uppercase tracking-widest text-gray-400 text-emerald-600">Revenue (Gross) / Nilai Project</label>
                   <input
                     required
                     type="number"
@@ -143,7 +174,7 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({ isOpen, onClose, onSub
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="block text-[10px] font-black uppercase tracking-widest text-gray-400 text-amber-600">Payout (to Talent/Vendor)</label>
+                  <label className="block text-[10px] font-black uppercase tracking-widest text-gray-400 text-amber-600">Payout (to Talent/Vendor) / Biaya Talent</label>
                   <input
                     required
                     type="number"
@@ -153,7 +184,17 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({ isOpen, onClose, onSub
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="block text-[10px] font-black uppercase tracking-widest text-gray-400">Job Category</label>
+                  <label className="block text-[10px] font-black uppercase tracking-widest text-gray-400 text-red-600">Talangan (Biaya Sendiri)</label>
+                  <input
+                    required
+                    type="number"
+                    className="w-full bg-gray-50 border-2 border-red-100 p-3 font-mono text-xs focus:border-red-500 outline-none transition-colors"
+                    value={formData.talangan}
+                    onChange={e => setFormData({ ...formData, talangan: Number(e.target.value) })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="block text-[10px] font-black uppercase tracking-widest text-gray-400">Job Category / Kategori Job</label>
                   <select
                     className="w-full bg-gray-50 border-2 border-gray-100 p-3 font-mono text-xs focus:border-[#141414] outline-none appearance-none"
                     value={formData.category}
@@ -165,7 +206,7 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({ isOpen, onClose, onSub
                   </select>
                 </div>
                 <div className="space-y-2">
-                  <label className="block text-[10px] font-black uppercase tracking-widest text-gray-400">Workflow Status</label>
+                  <label className="block text-[10px] font-black uppercase tracking-widest text-[#141414]">Workflow Status / Status Kerja</label>
                   <select
                     className="w-full bg-gray-50 border-2 border-gray-100 p-3 font-mono text-xs focus:border-[#141414] outline-none appearance-none"
                     value={formData.status}
@@ -177,13 +218,82 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({ isOpen, onClose, onSub
                     <option value="FINALIZED">FINALIZED</option>
                   </select>
                 </div>
+                <div className="space-y-2">
+                  <label className="block text-[10px] font-black uppercase tracking-widest text-violet-600 font-semibold">Jumlah Talent / Talent Count</label>
+                  <input
+                    required
+                    type="number"
+                    min="0"
+                    className="w-full bg-violet-50/20 border-2 border-violet-100 p-3 font-mono text-xs focus:border-violet-500 outline-none transition-colors"
+                    value={formData.talentCount}
+                    onChange={e => setFormData({ ...formData, talentCount: Number(e.target.value) })}
+                    placeholder="E.G. 5"
+                  />
+                </div>
+
+                <div className="space-y-2 md:col-span-2 border-t border-dashed border-gray-200 pt-4">
+                  <h3 className="text-xs font-black uppercase text-[#141414] tracking-widest">
+                    Job Assets & Broadcast Info / Link Data & Broadcast
+                  </h3>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="block text-[10px] font-black uppercase tracking-widest text-blue-600 font-semibold">
+                    Worksheet Link / Link Worksheet (Input Sheet)
+                  </label>
+                  <input
+                    type="url"
+                    className="w-full bg-blue-50/30 border-2 border-blue-100 p-3 font-mono text-xs focus:border-blue-500 outline-none transition-colors"
+                    value={formData.worksheetLink}
+                    onChange={e => setFormData({ ...formData, worksheetLink: e.target.value })}
+                    placeholder="https://docs.google.com/spreadsheets/..."
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="block text-[10px] font-black uppercase tracking-widest text-emerald-600 font-semibold">
+                    Link Group / WA Group Link
+                  </label>
+                  <input
+                    type="url"
+                    className="w-full bg-emerald-50/30 border-2 border-emerald-100 p-3 font-mono text-xs focus:border-emerald-500 outline-none transition-colors"
+                    value={formData.groupLink}
+                    onChange={e => setFormData({ ...formData, groupLink: e.target.value })}
+                    placeholder="https://chat.whatsapp.com/..."
+                  />
+                </div>
+
+                <div className="space-y-2 md:col-span-2">
+                  <div className="flex justify-between items-center">
+                    <label className="block text-[10px] font-black uppercase tracking-widest text-gray-400">
+                      Broadcast Text / Pesan Broadcast
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const template = `📢 *BROADCAST JOB INFORMATION* 📢\n\n📌 *Project:* ${formData.name || '-'}\n🏢 *Client:* ${formData.client || '-'}\n🏷️ *Brand:* ${formData.brand || '-'}\n📅 *Running Date:* ${formData.runningDate || '-'}\n👥 *Jumlah Talent:* ${formData.talentCount || '0'}\n💼 *Category:* ${formData.category || '-'}\n💰 *Payout Info Updated!*\n\n📝 *Worksheet:* ${formData.worksheetLink || '-'}\n💬 *Join Group:* ${formData.groupLink || '-'}\n\nMohon dikordinasikan ya Team, thank you! 🙏✨`;
+                        setFormData({ ...formData, broadcastText: template });
+                      }}
+                      className="text-[9px] font-black text-indigo-600 border-2 border-indigo-600 bg-white px-2 py-1 uppercase tracking-widest hover:bg-[#141414] hover:text-white transition-all active:translate-y-[1px]"
+                    >
+                      🪄 Auto Generate Message
+                    </button>
+                  </div>
+                  <textarea
+                    rows={3}
+                    className="w-full bg-gray-50 border-2 border-gray-100 p-3 font-mono text-xs focus:border-[#141414] outline-none transition-colors resize-none"
+                    value={formData.broadcastText}
+                    onChange={e => setFormData({ ...formData, broadcastText: e.target.value })}
+                    placeholder="Write details for broadcast or click Auto Generate text above..."
+                  />
+                </div>
               </div>
 
               <div className="pt-6 border-t border-gray-100 flex justify-end gap-4">
                  <div className="mr-auto">
                     <span className="block text-[8px] font-black uppercase text-gray-300">ESTIMATED PROFIT</span>
                     <span className="font-mono text-lg font-black text-emerald-600">
-                      Rp{(formData.revenue - formData.payout).toLocaleString('id-ID')}
+                      Rp{(formData.revenue - formData.payout - formData.talangan).toLocaleString('id-ID')}
                     </span>
                  </div>
                 <button

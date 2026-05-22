@@ -11,18 +11,20 @@ interface StatsProps {
 export const Stats: React.FC<StatsProps> = ({ projects }) => {
   const totalRevenue = projects.reduce((acc, p) => acc + p.revenue, 0);
   const totalPayout = projects.reduce((acc, p) => acc + p.payout, 0);
-  const netProfit = totalRevenue - totalPayout;
+  const totalTalangan = projects.reduce((acc, p) => acc + (p.talangan || 0), 0);
+  const netProfit = totalRevenue - totalPayout - totalTalangan;
   const activeJobs = projects.filter(p => ['BOOKING', 'FIXED/RUNNING'].includes(p.status)).length;
 
   const cards = [
     { label: 'Total Revenue (Gross)', value: formatRupiah(totalRevenue), icon: TrendingUp, color: 'bg-[#141414]' },
     { label: 'Total Payout', value: formatRupiah(totalPayout), icon: Wallet, color: 'bg-amber-500' },
+    { label: 'Total Talangan', value: formatRupiah(totalTalangan), icon: Wallet, color: 'bg-red-500' },
     { label: 'Net Profit', value: formatRupiah(netProfit), icon: DollarSign, color: 'bg-emerald-500' },
     { label: 'Active Jobs', value: activeJobs.toString(), icon: Briefcase, color: 'bg-blue-500' },
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
       {cards.map((card, i) => (
         <motion.div
           key={card.label}
