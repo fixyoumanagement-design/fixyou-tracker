@@ -31,20 +31,20 @@ export const Stats: React.FC<StatsProps> = ({ projects }) => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: i * 0.1 }}
-          className="bg-white border-2 border-[#141414] p-6 shadow-[4px_4px_0px_0px_#141414]"
+          className="bg-white border-2 border-[#141414] p-4 sm:p-5 lg:p-3.5 xl:p-5 shadow-[4px_4px_0px_0px_#141414]"
         >
-          <div className="flex justify-between items-start mb-4">
-            <div className={card.color + " p-2 text-white"}>
-              <card.icon size={20} />
+          <div className="flex justify-between items-start mb-3">
+            <div className={card.color + " p-1.5 text-white"}>
+              <card.icon size={16} />
             </div>
-            <span className="font-mono text-[10px] uppercase text-gray-400 font-bold tracking-widest">
+            <span className="font-mono text-[9px] uppercase text-gray-400 font-bold tracking-widest">
               Live Data
             </span>
           </div>
-          <p className="text-gray-500 text-[10px] uppercase font-bold tracking-tight mb-1">
+          <p className="text-gray-500 text-[9px] uppercase font-bold tracking-tight mb-1 truncate">
             {card.label}
           </p>
-          <p className="text-xl font-black font-mono tracking-tighter">
+          <p className="text-base sm:text-lg md:text-xl lg:text-sm xl:text-lg 2xl:text-xl font-black font-mono tracking-tighter truncate" title={card.value}>
             {card.value}
           </p>
         </motion.div>
