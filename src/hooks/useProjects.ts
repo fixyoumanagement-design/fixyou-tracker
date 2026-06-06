@@ -10,6 +10,7 @@ import {
   doc,
   serverTimestamp
 } from 'firebase/firestore';
+import { onAuthStateChanged } from 'firebase/auth';
 import { db, auth } from '../lib/firebase';
 import { Project, OperationType, FirestoreErrorInfo } from '../types';
 
@@ -35,43 +36,66 @@ export function useProjects() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const path = 'projects';
-    const q = query(collection(db, path), orderBy('createdAt', 'desc'));
+    let unsubscribeSnap: (() => void) | null = null;
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const data = snapshot.docs.map(doc => {
-        const d = doc.data();
-        
-        // Helper to safely get a string date from potentially null Firestore Timestamps
-        const safeDate = (ts: any) => {
-          if (!ts) return new Date().toISOString();
-          try {
-            if (typeof ts.toDate === 'function') return ts.toDate().toISOString();
-            if (ts instanceof Date) return ts.toISOString();
-            if (typeof ts === 'string') return ts;
-            return new Date().toISOString();
-          } catch (e) {
-            return new Date().toISOString();
-          }
-        };
+    const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
+      // Clean up previous snapshot listener if it exists
+      if (unsubscribeSnap) {
+        unsubscribeSnap();
+        unsubscribeSnap = null;
+      }
 
-        return {
-          ...d,
-          id: doc.id,
-          createdAt: safeDate(d.createdAt),
-          updatedAt: safeDate(d.updatedAt),
-          runningDate: d.runningDate || new Date().toISOString(),
-        };
-      }) as Project[];
-      setProjects(data);
-      setLoading(false);
-    }, (err) => {
-      handleFirestoreError(err, OperationType.LIST, path);
-      setError(err.message);
-      setLoading(false);
+      if (!user) {
+        setProjects([]);
+        setLoading(false);
+        return;
+      }
+
+      // Only load projects for authenticated users
+      const path = 'projects';
+      const q = query(collection(db, path), orderBy('createdAt', 'desc'));
+
+      unsubscribeSnap = onSnapshot(q, (snapshot) => {
+        const data = snapshot.docs.map(doc => {
+          const d = doc.data();
+          
+          // Helper to safely get a string date from potentially null Firestore Timestamps
+          const safeDate = (ts: any) => {
+            if (!ts) return new Date().toISOString();
+            try {
+              if (typeof ts.toDate === 'function') return ts.toDate().toISOString();
+              if (ts instanceof Date) return ts.toISOString();
+              if (typeof ts === 'string') return ts;
+              return new Date().toISOString();
+            } catch (e) {
+              return new Date().toISOString();
+            }
+          };
+
+          return {
+            ...d,
+            id: doc.id,
+            createdAt: safeDate(d.createdAt),
+            updatedAt: safeDate(d.updatedAt),
+            runningDate: d.runningDate || new Date().toISOString(),
+          };
+        }) as Project[];
+        setProjects(data);
+        setError(null);
+        setLoading(false);
+      }, (err) => {
+        handleFirestoreError(err, OperationType.LIST, path);
+        setError(err.message);
+        setLoading(false);
+      });
     });
 
-    return () => unsubscribe();
+    return () => {
+      if (unsubscribeSnap) {
+        unsubscribeSnap();
+      }
+      unsubscribeAuth();
+    };
   }, []);
 
   const addProject = async (project: Omit<Project, 'id' | 'createdAt' | 'updatedAt' | 'createdBy'>) => {

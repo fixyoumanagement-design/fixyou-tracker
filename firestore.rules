@@ -37,7 +37,12 @@ service cloud.firestore {
              data.runningDate is string &&
              data.revenue is number &&
              data.payout is number &&
-             data.profit == data.revenue - data.payout &&
+             data.get('talangan', 0) is number &&
+             data.profit == data.revenue - data.payout - data.get('talangan', 0) &&
+             data.get('talentCount', 0) is number &&
+             data.get('worksheetLink', '') is string && data.get('worksheetLink', '').size() <= 2048 &&
+             data.get('groupLink', '') is string && data.get('groupLink', '').size() <= 2048 &&
+             data.get('broadcastText', '') is string && data.get('broadcastText', '').size() <= 10000 &&
              data.status in ["WAIT", "BOOKING", "FIXED/RUNNING", "FINALIZED"] &&
              data.category in ["PIC", "Job Partner", "Job Vendor"];
     }
